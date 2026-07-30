@@ -112,5 +112,16 @@ connectDB().then(async () => {
 
   app.listen(PORT, () => {
     console.log(`🚀 EstateHub Secure Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+
+    // Self-Ping Keepalive (pings server every 10 minutes to prevent Render free instance from sleeping)
+    if (process.env.NODE_ENV === 'production') {
+      setInterval(async () => {
+        try {
+          await fetch(`http://localhost:${PORT}/api/health`);
+        } catch (e) {
+          // Ignore ping errors
+        }
+      }, 10 * 60 * 1000);
+    }
   });
 });
