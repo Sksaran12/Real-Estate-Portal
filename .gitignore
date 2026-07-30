@@ -1,23 +1,20 @@
-# Environment variable files (CRITICAL SECURITY: DO NOT COMMIT .env)
-.env
-*.env
-!.env.example
-backend/.env
-frontend/.env
-
 # Dependencies
 node_modules/
 backend/node_modules/
 frontend/node_modules/
 
-# Production build outputs
-frontend/dist/
-frontend/build/
-dist/
+# Environment Variables & Secrets (CRITICAL)
+.env
+backend/.env
+frontend/.env
+*.env.local
 
-# OS & Editor files
+# Build Outputs
+dist/
+frontend/dist/
+
+# Logs & System Files
+*.log
 .DS_Store
-Thumbs.db
 .vscode/
 .idea/
-*.log
