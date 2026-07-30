@@ -1,0 +1,105 @@
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const dotenv = require('dotenv');
+const connectDB = require('./config/db');
+const { errorHandler, notFound } = require('./middleware/errorMiddleware');
+const Property = require('./models/Property');
+const seedData = require('./utils/seedData');
+
+dotenv.config();
+
+// Critical Check: Prevent fallback JWT secrets in production environments
+if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'secret')) {
+  console.error('FATAL SECURITY ERROR: JWT_SECRET must be set securely in production env!');
+  process.exit(1);
+}
+
+const app = express();
+
+// Security Headers with Helmet
+app.use(helmet());
+
+// Rate Limiting: Global API rate limiter (100 requests per 15 minutes per IP)
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests from this IP, please try again after 15 minutes.' },
+});
+
+// Stricter Rate Limiter for Authentication & AI endpoints (10 requests per 15 mins)
+const strictAuthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many authentication/AI attempts, please try again after 15 minutes.' },
+});
+
+// CORS Configuration
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : ['http://localhost:5173', 'http://localhost:3000'];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl) or if origin is in whitelist
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS policy'));
+      }
+    },
+    credentials: true,
+  })
+);
+
+// Body Parsers with safe payload size limits (prevents payload flood attacks)
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Apply Rate Limiters
+app.use('/api/', globalLimiter);
+app.use('/api/auth/login', strictAuthLimiter);
+app.use('/api/auth/register', strictAuthLimiter);
+app.use('/api/ai/', strictAuthLimiter);
+
+// Mount API Routes
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/properties', require('./routes/propertyRoutes'));
+app.use('/api/favorites', require('./routes/favoriteRoutes'));
+app.use('/api/inquiries', require('./routes/inquiryRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/ai', require('./routes/aiRoutes'));
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'EstateHub Secure API is running' });
+});
+
+// Error Handlers
+app.use(notFound);
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 5000;
+
+// Start Server and Auto-Seed if DB is empty
+connectDB().then(async () => {
+  try {
+    const propertyCount = await Property.countDocuments();
+    if (propertyCount === 0) {
+      console.log('Database empty on initial boot. Running automatic seed...');
+      await seedData();
+    }
+  } catch (err) {
+    console.error('Auto seed check error:', err.message);
+  }
+
+  app.listen(PORT, () => {
+    console.log(`🚀 EstateHub Secure Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  });
+});
