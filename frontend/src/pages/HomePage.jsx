@@ -14,6 +14,7 @@ import {
   Star,
   Users,
   Building,
+  RefreshCw,
 } from 'lucide-react';
 import PropertyCard from '../components/properties/PropertyCard';
 import MortgageCalculator from '../components/common/MortgageCalculator';
@@ -23,6 +24,7 @@ import API from '../services/api';
 const HomePage = () => {
   const [featuredProperties, setFeaturedProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [searchParams, setSearchParams] = useState({
     propertyType: 'all',
     city: '',
@@ -30,20 +32,23 @@ const HomePage = () => {
   });
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchFeatured = async () => {
-      try {
-        const { data } = await API.get('/properties?limit=6');
-        if (data.success) {
-          setFeaturedProperties(data.data);
-        }
-      } catch (err) {
-        console.error('Error fetching featured properties:', err);
-      } finally {
-        setLoading(false);
+  const fetchFeatured = async () => {
+    setLoading(true);
+    setFetchError(false);
+    try {
+      const { data } = await API.get('/properties?limit=6');
+      if (data.success && data.data) {
+        setFeaturedProperties(data.data);
       }
-    };
+    } catch (err) {
+      console.error('Error fetching featured properties:', err);
+      setFetchError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchFeatured();
   }, []);
 
@@ -82,7 +87,7 @@ const HomePage = () => {
         <div className="relative z-10 max-w-6xl mx-auto px-4 text-center space-y-10">
           {/* Badge */}
           <div className="inline-flex items-center space-x-2.5 px-4 py-2 rounded-full bg-brand-500/15 border border-brand-400/30 text-brand-300 text-xs font-extrabold uppercase tracking-widest backdrop-blur-md shadow-lg shadow-brand-500/10 text-white">
-            <Sparkles className="w-4 h-4 text-amber-300 animate-pulse " />
+            <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
             <span>Assam & India's Premier Real Estate Portal</span>
           </div>
 
@@ -202,6 +207,25 @@ const HomePage = () => {
             {[1, 2, 3].map((n) => (
               <div key={n} className="h-80 bg-slate-200 animate-pulse rounded-3xl" />
             ))}
+          </div>
+        ) : fetchError || featuredProperties.length === 0 ? (
+          <div className="bg-white p-8 rounded-3xl border border-slate-200 text-center space-y-4 shadow-sm">
+            <div className="w-12 h-12 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center mx-auto">
+              <RefreshCw className="w-6 h-6 animate-spin" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-slate-900">Connecting to Cloud Backend Database...</h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                If the server on Render was idle, it takes ~20 seconds to spin up. Click below to load property listings.
+              </p>
+            </div>
+            <button
+              onClick={fetchFeatured}
+              className="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md transition-all inline-flex items-center space-x-2"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Load Property Listings</span>
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
