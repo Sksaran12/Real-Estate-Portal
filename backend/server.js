@@ -78,6 +78,15 @@ app.use('/api/auth/login', strictAuthLimiter);
 app.use('/api/auth/register', strictAuthLimiter);
 app.use('/api/ai/', strictAuthLimiter);
 
+// Root Status & Health Check endpoints
+app.get('/', (req, res) => {
+  res.json({ success: true, status: 'ok', message: 'EstateHub Real Estate Portal API is running live' });
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({ success: true, status: 'ok', message: 'EstateHub Secure API is running' });
+});
+
 // Mount API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/properties', require('./routes/propertyRoutes'));
@@ -86,20 +95,15 @@ app.use('/api/inquiries', require('./routes/inquiryRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes'));
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'EstateHub Secure API is running' });
-});
-
 // Error Handlers
 app.use(notFound);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-// Start Express HTTP Server IMMEDIATELY so Render binds to port 5000 instantly without waiting on DB network delay
-app.listen(PORT, () => {
-  console.log(`🚀 EstateHub Secure Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+// Listen explicitly on host '0.0.0.0' for cloud container load balancer compatibility (Render, Railway, Docker)
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 EstateHub Secure Server running on host 0.0.0.0 and port ${PORT}`);
 
   // Connect to MongoDB Atlas in background
   connectDB().then(async () => {
