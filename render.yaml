@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: real-estate-portal-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGODB_URI
+        value: mongodb+srv://EstateHub:EstateHUB76251234@cluster0.objtotk.mongodb.net/real_estate_portal?retryWrites=true&w=majority
+      - key: JWT_SECRET
+        value: dfdcef88eebc94157ffa069e08d2ffab68a73222d95bfb8529baa31d2051810f1b5d450d37ccacd3eec084f5be568655215e30bbea6c6930a64cd79997c77466
+      - key: JWT_EXPIRE
+        value: 30d
+      - key: ALLOWED_ORIGINS
+        value: "*"
