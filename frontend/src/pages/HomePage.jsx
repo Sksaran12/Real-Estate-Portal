@@ -19,6 +19,8 @@ import {
 import PropertyCard from '../components/properties/PropertyCard';
 import MortgageCalculator from '../components/common/MortgageCalculator';
 import TestimonialSection from '../components/common/TestimonialSection';
+import GuwahatiNeighborhoodGuide from '../components/common/GuwahatiNeighborhoodGuide';
+import PropertyInvestmentCalculator from '../components/common/PropertyInvestmentCalculator';
 import API from '../services/api';
 
 const HomePage = () => {
@@ -80,13 +82,13 @@ const HomePage = () => {
             className="w-full h-full object-cover opacity-20 scale-105 transition-transform duration-1000"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-navy-950/90 via-navy-950/80 to-slate-900" />
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-brand-600/20 blur-[140px] rounded-full pointer-events-none" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-brand-600/20 blur-[140px] rounded-full pointer-events-none animate-pulse" />
         </div>
 
         {/* Hero Main Content */}
         <div className="relative z-10 max-w-6xl mx-auto px-4 text-center space-y-10">
           {/* Badge */}
-          <div className="inline-flex items-center space-x-2.5 px-4 py-2 rounded-full bg-brand-500/15 border border-brand-400/30 text-brand-300 text-xs font-extrabold uppercase tracking-widest backdrop-blur-md shadow-lg shadow-brand-500/10 text-white">
+          <div className="inline-flex items-center space-x-2.5 px-4 py-2 rounded-full bg-brand-500/15 border border-brand-400/30 text-brand-300 text-xs font-extrabold uppercase tracking-widest backdrop-blur-md shadow-lg shadow-brand-500/10 text-white hover:scale-105 transition-transform">
             <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
             <span>Assam & India's Premier Real Estate Portal</span>
           </div>
@@ -107,22 +109,22 @@ const HomePage = () => {
 
           {/* Floating Live Metrics Badges */}
           <div className="flex flex-wrap justify-center gap-4 text-xs font-bold text-slate-200">
-            <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/15">
+            <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/15 hover:bg-white/20 transition-all cursor-default">
               <Building className="w-4 h-4 text-brand-400" />
               <span>5,400+ Active Assam Properties</span>
             </div>
-            <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/15">
+            <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/15 hover:bg-white/20 transition-all cursor-default">
               <Star className="w-4 h-4 text-amber-400 fill-current" />
               <span>4.9/5 Trust Score</span>
             </div>
-            <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/15">
+            <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/15 hover:bg-white/20 transition-all cursor-default">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span>0% Brokerage Direct Owner Contacts</span>
             </div>
           </div>
 
           {/* Search Box Container */}
-          <div className="max-w-4xl mx-auto bg-white/95 backdrop-blur-xl p-4 sm:p-5 rounded-3xl shadow-2xl border border-white/40 text-left space-y-4">
+          <div className="max-w-4xl mx-auto bg-white/95 backdrop-blur-xl p-4 sm:p-5 rounded-3xl shadow-2xl border border-white/40 text-left space-y-4 hover:shadow-brand-500/10 transition-shadow">
             {/* Search Mode Tabs */}
             <div className="flex items-center space-x-2 border-b border-slate-100 pb-3">
               {[
@@ -134,9 +136,9 @@ const HomePage = () => {
                   key={tab.id}
                   type="button"
                   onClick={() => setSearchParams((prev) => ({ ...prev, propertyType: tab.id }))}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-extrabold uppercase transition-all ${
+                  className={`px-5 py-2.5 rounded-xl text-xs font-extrabold uppercase transition-all duration-300 ${
                     searchParams.propertyType === tab.id
-                      ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25'
+                      ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25 scale-102'
                       : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
@@ -154,7 +156,7 @@ const HomePage = () => {
                   placeholder="Guwahati, GS Road, Beltola..."
                   value={searchParams.city}
                   onChange={(e) => setSearchParams((prev) => ({ ...prev, city: e.target.value }))}
-                  className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-600 bg-slate-50/50"
+                  className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-600 bg-slate-50/50 transition-all"
                 />
               </div>
 
@@ -163,7 +165,7 @@ const HomePage = () => {
                 <select
                   value={searchParams.category}
                   onChange={(e) => setSearchParams((prev) => ({ ...prev, category: e.target.value }))}
-                  className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-600 bg-slate-50/50"
+                  className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-600 bg-slate-50/50 transition-all"
                 >
                   <option value="all">All Categories</option>
                   <option value="apartment">Apartments / Flats</option>
@@ -195,10 +197,10 @@ const HomePage = () => {
           </div>
           <Link
             to="/properties"
-            className="inline-flex items-center space-x-2 font-bold text-brand-600 hover:text-brand-700 text-sm"
+            className="inline-flex items-center space-x-2 font-bold text-brand-600 hover:text-brand-700 text-sm group"
           >
             <span>Explore All Listings</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
 
@@ -221,7 +223,7 @@ const HomePage = () => {
             </div>
             <button
               onClick={fetchFeatured}
-              className="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md transition-all inline-flex items-center space-x-2"
+              className="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md transition-all inline-flex items-center space-x-2 active:scale-95"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Load Property Listings</span>
@@ -230,10 +232,22 @@ const HomePage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredProperties.map((property) => (
-              <PropertyCard key={property._id} property={property} />
+              <div key={property._id} className="hover:-translate-y-1.5 transition-transform duration-300">
+                <PropertyCard property={property} />
+              </div>
             ))}
           </div>
         )}
+      </section>
+
+      {/* 🗺️ INTERACTIVE GUWAHATI NEIGHBORHOOD GUIDE */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <GuwahatiNeighborhoodGuide />
+      </section>
+
+      {/* 📈 INTERACTIVE ASSAM INVESTMENT & ROI ESTIMATOR */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PropertyInvestmentCalculator />
       </section>
 
       {/* 🌆 POPULAR GUWAHATI LOCALITIES & CITIES */}
@@ -249,7 +263,7 @@ const HomePage = () => {
               <Link
                 key={idx}
                 to={`/properties?city=${city.name}`}
-                className="group relative aspect-[4/5] rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300"
+                className="group relative aspect-[4/5] rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
               >
                 <img
                   src={city.img}
