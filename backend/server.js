@@ -51,7 +51,6 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin or if wildcard / matching domain
       if (
         !origin ||
         allowedOrigins.includes('*') ||
@@ -62,7 +61,7 @@ app.use(
       ) {
         callback(null, true);
       } else {
-        callback(null, true); // Fallback allow to avoid deployment blockage
+        callback(null, true);
       }
     },
     credentials: true,
@@ -98,30 +97,31 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-// Start Server and Auto-Seed if DB is empty
-connectDB().then(async () => {
-  try {
-    const propertyCount = await Property.countDocuments();
-    if (propertyCount === 0) {
-      console.log('Database empty on initial boot. Running automatic seed...');
-      await seedData();
-    }
-  } catch (err) {
-    console.error('Auto seed check error:', err.message);
-  }
+// Start Express HTTP Server IMMEDIATELY so Render binds to port 5000 instantly without waiting on DB network delay
+app.listen(PORT, () => {
+  console.log(`🚀 EstateHub Secure Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 
-  app.listen(PORT, () => {
-    console.log(`🚀 EstateHub Secure Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-
-    // Self-Ping Keepalive (pings server every 10 minutes to prevent Render free instance from sleeping)
-    if (process.env.NODE_ENV === 'production') {
-      setInterval(async () => {
-        try {
-          await fetch(`http://localhost:${PORT}/api/health`);
-        } catch (e) {
-          // Ignore ping errors
-        }
-      }, 10 * 60 * 1000);
+  // Connect to MongoDB Atlas in background
+  connectDB().then(async () => {
+    try {
+      const propertyCount = await Property.countDocuments();
+      if (propertyCount === 0) {
+        console.log('Database empty on initial boot. Running automatic seed...');
+        await seedData();
+      }
+    } catch (err) {
+      console.error('Auto seed check error:', err.message);
     }
   });
+
+  // Self-Ping Keepalive (pings server every 10 minutes to prevent Render free instance from sleeping)
+  if (process.env.NODE_ENV === 'production') {
+    setInterval(async () => {
+      try {
+        await fetch(`http://localhost:${PORT}/api/health`);
+      } catch (e) {
+        // Ignore ping errors
+      }
+    }, 10 * 60 * 1000);
+  }
 });

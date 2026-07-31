@@ -1,20 +1,20 @@
 import axios from 'axios';
 
-// Smart Base URL: Use env variable, or if running on Vercel/cloud, fallback to deployed backend, else localhost
+// Smart Base URL: Use env variable or exact deployed Render primary URL from dashboard
 const getBaseURL = () => {
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
   // Check if browser is on live deployment (Vercel/Netlify)
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    return 'https://real-estate-portal-backend.onrender.com/api';
+    return 'https://real-estate-portal-vuir.onrender.com/api';
   }
   return 'http://localhost:5000/api';
 };
 
 const API = axios.create({
   baseURL: getBaseURL(),
-  timeout: 30000, // 30s timeout to allow Render free instance to spin up
+  timeout: 35000, // 35s timeout to handle Render cold start
 });
 
 // Interceptor to attach Authorization header if token exists
