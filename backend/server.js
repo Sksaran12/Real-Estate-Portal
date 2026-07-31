@@ -10,12 +10,15 @@ const seedData = require('./utils/seedData');
 
 dotenv.config();
 
-// Ensure JWT Secret is present, fallback to production random secret if missing
+// Ensure JWT Secret is present, fallback to production secret if missing
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'secret') {
   process.env.JWT_SECRET = 'dfdcef88eebc94157ffa069e08d2ffab68a73222d95bfb8529baa31d2051810f1b5d450d37ccacd3eec084f5be568655215e30bbea6c6930a64cd79997c77466';
 }
 
 const app = express();
+
+// Enable Trust Proxy for Render / Vercel load balancers (CRITICAL for rate limiting and IP detection)
+app.set('trust proxy', 1);
 
 // Security Headers with Helmet
 app.use(
@@ -42,40 +45,28 @@ const strictAuthLimiter = rateLimit({
   message: { success: false, message: 'Too many authentication/AI attempts, please try again after 15 minutes.' },
 });
 
-// CORS Configuration - Permissive for Vercel/Netlify deployments
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',')
-  : ['*'];
-
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (
-        !origin ||
-        allowedOrigins.includes('*') ||
-        allowedOrigins.includes(origin) ||
-        origin.endsWith('.vercel.app') ||
-        origin.endsWith('.netlify.app') ||
-        origin.includes('localhost')
-      ) {
-        callback(null, true);
-      } else {
-        callback(null, true);
-      }
-    },
-    credentials: true,
-  })
-);
+// Production CORS setup - Reflect origin dynamically to prevent browser wildcard credentials error
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  res.header('Access-Control-Allow-Origin', origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // Body Parsers with safe payload size limits
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Apply Rate Limiters
-app.use('/api/', globalLimiter);
+app.use('/api', globalLimiter);
 app.use('/api/auth/login', strictAuthLimiter);
 app.use('/api/auth/register', strictAuthLimiter);
-app.use('/api/ai/', strictAuthLimiter);
+app.use('/api/ai', strictAuthLimiter);
 
 // Root Status & Health Check endpoints
 app.get('/', (req, res) => {
@@ -121,7 +112,7 @@ app.listen(PORT, '0.0.0.0', () => {
   if (process.env.NODE_ENV === 'production') {
     setInterval(async () => {
       try {
-        await fetch(`http://localhost:${PORT}/api/health`);
+        await fetch(`http://127.0.0.1:${PORT}/api/health`);
       } catch (e) {
         // Ignore ping errors
       }
