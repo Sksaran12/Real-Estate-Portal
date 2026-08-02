@@ -83,6 +83,130 @@ const loginUser = async (req, res) => {
   }
 };
 
+// @desc    Send 6-Digit OTP Code for Forgot Password or OTP Login
+// @route   POST /api/auth/send-otp
+// @access  Public
+const sendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email address is required' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'No registered user found with this email' });
+    }
+
+    // Generate 6-digit random OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetOtp = otp;
+    user.resetOtpExpire = Date.now() + 10 * 60 * 1000; // 10 minutes expiry
+    await user.save();
+
+    res.json({
+      success: true,
+      message: `6-Digit OTP code generated successfully! (OTP Code: ${otp})`,
+      otp,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Verify OTP and Reset Password
+// @route   POST /api/auth/reset-password-otp
+// @access  Public
+const resetPasswordWithOtp = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Email, OTP code, and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+    }
+
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+      resetOtp: otp.toString().trim(),
+      resetOtpExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired 6-Digit OTP code' });
+    }
+
+    // Update password and clear OTP
+    user.password = newPassword;
+    user.resetOtp = null;
+    user.resetOtpExpire = null;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password reset successfully! Logged in automatically.',
+      data: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        avatar: user.avatar,
+        token: generateToken(user._id),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Login directly with OTP
+// @route   POST /api/auth/login-otp
+// @access  Public
+const loginWithOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: 'Email and 6-Digit OTP code are required' });
+    }
+
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+      resetOtp: otp.toString().trim(),
+      resetOtpExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired 6-Digit OTP code' });
+    }
+
+    // Clear OTP after successful login
+    user.resetOtp = null;
+    user.resetOtpExpire = null;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'OTP verification successful! Welcome back.',
+      data: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        avatar: user.avatar,
+        token: generateToken(user._id),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Get user profile
 // @route   GET /api/auth/me
 // @access  Private
@@ -136,6 +260,9 @@ const updateProfile = async (req, res) => {
 module.exports = {
   registerUser,
   loginUser,
+  sendOtp,
+  resetPasswordWithOtp,
+  loginWithOtp,
   getMe,
   updateProfile,
 };

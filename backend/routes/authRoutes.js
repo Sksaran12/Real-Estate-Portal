@@ -1,6 +1,14 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { registerUser, loginUser, getMe, updateProfile } = require('../controllers/authController');
+const {
+  registerUser,
+  loginUser,
+  sendOtp,
+  resetPasswordWithOtp,
+  loginWithOtp,
+  getMe,
+  updateProfile,
+} = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 const { validate } = require('../middleware/validateMiddleware');
 
@@ -18,8 +26,21 @@ const loginValidation = [
   body('password').notEmpty().withMessage('Password is required'),
 ];
 
+const sendOtpValidation = [
+  body('email').trim().isEmail().withMessage('Valid email is required').normalizeEmail(),
+];
+
+const resetPasswordOtpValidation = [
+  body('email').trim().isEmail().withMessage('Valid email is required').normalizeEmail(),
+  body('otp').trim().notEmpty().withMessage('6-Digit OTP code is required'),
+  body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters long'),
+];
+
 router.post('/register', validate(registerValidation), registerUser);
 router.post('/login', validate(loginValidation), loginUser);
+router.post('/send-otp', validate(sendOtpValidation), sendOtp);
+router.post('/reset-password-otp', validate(resetPasswordOtpValidation), resetPasswordWithOtp);
+router.post('/login-otp', loginWithOtp);
 router.get('/me', protect, getMe);
 router.put('/profile', protect, updateProfile);
 
